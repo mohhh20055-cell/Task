@@ -1,38 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { AppConfig, FormSubmission } from './types';
-import { DEFAULT_CONFIG, STORAGE_KEY_CONFIG, STORAGE_KEY_SUBMISSIONS } from './constants/defaultConfig';
+import { DEFAULT_CONFIG } from './constants/defaultConfig';
 import { DogProductsForm } from './components/DogProductsForm';
 import { RewardsForm } from './components/RewardsForm';
 import { AdminPanel } from './components/AdminPanel';
 import { SuccessView } from './components/SuccessView';
+import {
+  fetchConfigFromDB,
+  saveConfigToDB,
+  fetchSubmissionsFromDB,
+  addSubmissionToDB,
+  clearSubmissionsFromDB,
+} from './services/dbService';
 
 export default function App() {
-  const [config, setConfig] = useState<AppConfig>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_CONFIG);
-      if (saved) {
-        return { ...DEFAULT_CONFIG, ...JSON.parse(saved) };
-      }
-    } catch {
-      // fallback
-    }
-    return DEFAULT_CONFIG;
-  });
-
-  const [submissions, setSubmissions] = useState<FormSubmission[]>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_SUBMISSIONS);
-      if (saved) {
-        return JSON.parse(saved);
-      }
-    } catch {
-      // fallback
-    }
-    return [];
-  });
-
+  const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
+  const [submissions, setSubmissions] = useState<FormSubmission[]>([]);
   const [isAdminView, setIsAdminView] = useState<boolean>(false);
   const [submittedForm, setSubmittedForm] = useState<string | null>(null);
+
+  // Load configuration and submissions from Supabase DB on startup
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadInitialData() {
+      const [dbConfig, dbSubmissions] = await Promise.all([
+        fetchConfigFromDB(),
+        fetchSubmissionsFromDB(),
+      ]);
+
+      if (isMounted) {
+        setConfig(dbConfig);
+        setSubmissions(dbSubmissions);
+      }
+    }
+
+    loadInitialData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Check URL pathname, hash, and search query for 'admin'
   useEffect(() => {
@@ -61,23 +69,15 @@ export default function App() {
     };
   }, [config]);
 
-  const saveConfig = (newConfig: AppConfig) => {
+  const saveConfig = async (newConfig: AppConfig) => {
     setConfig(newConfig);
-    try {
-      localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(newConfig));
-    } catch (err) {
-      console.error('Failed to save config:', err);
-    }
+    await saveConfigToDB(newConfig);
   };
 
-  const handleFormSubmit = (submission: FormSubmission) => {
+  const handleFormSubmit = async (submission: FormSubmission) => {
     const updated = [submission, ...submissions];
     setSubmissions(updated);
-    try {
-      localStorage.setItem(STORAGE_KEY_SUBMISSIONS, JSON.stringify(updated));
-    } catch (err) {
-      console.error('Failed to save submission:', err);
-    }
+    await addSubmissionToDB(submission);
 
     if (submission.formType === 'dog_products') {
       const formTitle = config.dogForm.title;
@@ -85,13 +85,9 @@ export default function App() {
     }
   };
 
-  const handleClearSubmissions = () => {
+  const handleClearSubmissions = async () => {
     setSubmissions([]);
-    try {
-      localStorage.removeItem(STORAGE_KEY_SUBMISSIONS);
-    } catch (err) {
-      console.error('Failed to clear submissions:', err);
-    }
+    await clearSubmissionsFromDB();
   };
 
   const openAdmin = () => {
