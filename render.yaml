@@ -1,0 +1,13 @@
+services:
+  # Option 1: Render Web Service (Node.js + Express)
+  - type: web
+    name: landing-page-app
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
