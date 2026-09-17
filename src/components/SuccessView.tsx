@@ -1,5 +1,6 @@
 import React from 'react';
 import { GoogleFormFooter } from './GoogleFormFooter';
+import { CheckCircle2 } from 'lucide-react';
 
 interface Props {
   formTitle: string;
@@ -17,15 +18,22 @@ export const SuccessView: React.FC<Props> = ({ formTitle, onReset, onAdminClick 
             <h1 className="text-[28px] sm:text-[32px] font-normal leading-tight text-[#202124]">
               {formTitle}
             </h1>
-            <p className="text-[14px] text-[#202124]">
-              Your response has been recorded.
+
+            <div className="flex items-center gap-2 text.16px text-[#188038] font-medium pt-1">
+              <CheckCircle2 className="w-5 h-5" />
+              <span>Your response has been recorded successfully.</span>
+            </div>
+
+            <p className="text-[14px] text-[#3c4043]">
+              Thank you for taking the time to complete this form.
             </p>
+
             <div className="pt-2">
               <button
                 type="button"
                 id="submit-another-btn"
                 onClick={onReset}
-                className="text-[#1a73e8] hover:underline text-[14px] cursor-pointer"
+                className="text-[#1a73e8] hover:underline text-[14px] cursor-pointer font-medium"
               >
                 Submit another response
               </button>

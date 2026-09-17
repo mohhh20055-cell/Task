@@ -28,19 +28,6 @@ export const RewardsForm: React.FC<Props> = ({ config, onSubmit, onAdminClick })
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const submission: FormSubmission = {
-      id: Date.now().toString(),
-      formType: 'rewards',
-      date: new Date().toISOString(),
-      data: {
-        clickedOffer: 'Submit button clicked on Rewards form',
-      },
-    };
-    onSubmit(submission);
-  };
-
   return (
     <div className="w-full min-h-screen bg-[#ede7f6] py-4 px-2 sm:px-4 font-['Roboto',sans-serif] text-[#202124]">
       <div className="w-full max-w-[640px] mx-auto space-y-3">
@@ -136,17 +123,6 @@ export const RewardsForm: React.FC<Props> = ({ config, onSubmit, onAdminClick })
             {config.rewardsForm.termsText}
           </p>
         </div>
-
-        {/* Bottom Form Actions */}
-        <form onSubmit={handleSubmit} className="flex items-center justify-start pt-2 pb-6">
-          <button
-            type="submit"
-            id="submit-rewards-btn"
-            className="bg-[#673ab7] hover:bg-[#5e35b1] active:bg-[#512da8] text-white text-[14px] font-medium px-8 py-2.5 rounded-[4px] shadow-sm transition-colors cursor-pointer"
-          >
-            Submit
-          </button>
-        </form>
 
         <GoogleFormFooter onAdminClick={onAdminClick} />
       </div>

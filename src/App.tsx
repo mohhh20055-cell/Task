@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppConfig, FormMode, FormSubmission } from './types';
+import { AppConfig, FormSubmission } from './types';
 import { DEFAULT_CONFIG, STORAGE_KEY_CONFIG, STORAGE_KEY_SUBMISSIONS } from './constants/defaultConfig';
 import { DogProductsForm } from './components/DogProductsForm';
 import { RewardsForm } from './components/RewardsForm';
@@ -78,9 +78,11 @@ export default function App() {
     } catch (err) {
       console.error('Failed to save submission:', err);
     }
-    const formTitle =
-      submission.formType === 'dog_products' ? config.dogForm.title : config.rewardsForm.title;
-    setSubmittedForm(formTitle);
+
+    if (submission.formType === 'dog_products') {
+      const formTitle = config.dogForm.title;
+      setSubmittedForm(formTitle);
+    }
   };
 
   const handleClearSubmissions = () => {
