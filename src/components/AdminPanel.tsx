@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AppConfig, FormMode, FormSubmission } from '../types';
 import {
   Save,
@@ -15,15 +15,16 @@ import {
   Sliders,
   Lock,
   LogOut,
-  Key
+  Key,
+  AlertTriangle,
 } from 'lucide-react';
 import { DEFAULT_CONFIG } from '../constants/defaultConfig';
 
 interface Props {
   config: AppConfig;
-  onSaveConfig: (newConfig: AppConfig) => void;
+  onSaveConfig: (newConfig: AppConfig) => Promise<{ success: boolean; error?: string }>;
   submissions: FormSubmission[];
-  onClearSubmissions: () => void;
+  onClearSubmissions: () => Promise<void> | void;
   onCloseAdmin: () => void;
 }
 
@@ -43,9 +44,19 @@ export const AdminPanel: React.FC<Props> = ({
   const [activeTab, setActiveTab] = useState<'switcher' | 'links' | 'leads' | 'settings'>('switcher');
   const [formData, setFormData] = useState<AppConfig>({ ...config });
   const [saveAlert, setSaveAlert] = useState<boolean>(false);
+  const [saveError, setSaveError] = useState<string>('');
+  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   // New Password State inside Settings
   const [newAdminPassword, setNewAdminPassword] = useState<string>(config.adminPassword || 'admin');
+
+  // Sync formData whenever config changes from parent (e.g. after Supabase fetch)
+  useEffect(() => {
+    setFormData(config);
+    if (config.adminPassword) {
+      setNewAdminPassword(config.adminPassword);
+    }
+  }, [config]);
 
   // Login handler
   const handleLogin = (e: React.FormEvent) => {
@@ -59,33 +70,43 @@ export const AdminPanel: React.FC<Props> = ({
     }
   };
 
-  const handleToggleMode = (newMode: FormMode) => {
-    const updated = { ...formData, activeMode: newMode };
-    setFormData(updated);
-    onSaveConfig(updated);
-    setSaveAlert(true);
-    setTimeout(() => setSaveAlert(false), 2500);
+  const executeSave = async (updated: AppConfig) => {
+    setIsSaving(true);
+    setSaveError('');
+    setSaveAlert(false);
+
+    const res = await onSaveConfig(updated);
+    setIsSaving(false);
+
+    if (res && !res.success) {
+      setSaveError(res.error || 'فشل الحفظ في قاعدة البيانات.');
+    } else {
+      setSaveAlert(true);
+      setTimeout(() => setSaveAlert(false), 3000);
+    }
   };
 
-  const handleSaveAll = (e: React.FormEvent) => {
+  const handleToggleMode = async (newMode: FormMode) => {
+    const updated = { ...formData, activeMode: newMode };
+    setFormData(updated);
+    await executeSave(updated);
+  };
+
+  const handleSaveAll = async (e: React.FormEvent) => {
     e.preventDefault();
     const updated = {
       ...formData,
       adminPassword: newAdminPassword.trim() || 'admin',
     };
     setFormData(updated);
-    onSaveConfig(updated);
-    setSaveAlert(true);
-    setTimeout(() => setSaveAlert(false), 2500);
+    await executeSave(updated);
   };
 
-  const handleResetDefaults = () => {
+  const handleResetDefaults = async () => {
     if (window.confirm('هل أنت تأكد من استعادة الإعدادات الافتراضية؟')) {
       setFormData(DEFAULT_CONFIG);
       setNewAdminPassword(DEFAULT_CONFIG.adminPassword);
-      onSaveConfig(DEFAULT_CONFIG);
-      setSaveAlert(true);
-      setTimeout(() => setSaveAlert(false), 2000);
+      await executeSave(DEFAULT_CONFIG);
     }
   };
 
@@ -275,7 +296,21 @@ export const AdminPanel: React.FC<Props> = ({
       {saveAlert && (
         <div className="bg-[#188038] text-white py-2.5 px-4 text-center font-bold text-sm shadow flex items-center justify-center gap-2 animate-fadeIn">
           <CheckCircle2 className="w-5 h-5" />
-          <span>تم حفظ التعديلات وتطبيقها فوراً على الموقع المباشر!</span>
+          <span>تم حفظ التعديلات وتحديث قاعدة البيانات Supabase بنجاح!</span>
+        </div>
+      )}
+
+      {/* Error Notification Banner */}
+      {saveError && (
+        <div className="bg-[#d93025] text-white py-3 px-4 text-center font-bold text-sm shadow flex flex-col items-center justify-center gap-1 animate-fadeIn">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5" />
+            <span>خطأ أثناء الحفظ في قاعدة البيانات Supabase:</span>
+          </div>
+          <p className="text-xs font-mono dir-ltr dir-left bg-black/20 px-2 py-1 rounded">{saveError}</p>
+          <p className="text-[11px] font-normal underline mt-0.5">
+            تأكد من تشغيل أمر SQL الخاص بـ Disable/Enable RLS في Supabase SQL Editor.
+          </p>
         </div>
       )}
 
@@ -327,13 +362,14 @@ export const AdminPanel: React.FC<Props> = ({
                   <div className="mt-4 pt-4 border-t border-[#dadce0]/60 flex items-center justify-between">
                     <button
                       type="button"
+                      disabled={isSaving}
                       className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                         formData.activeMode === 'dog_products'
                           ? 'bg-[#673ab7] text-white'
                           : 'bg-[#f1f3f4] text-[#202124] hover:bg-[#e8eaed]'
                       }`}
                     >
-                      {formData.activeMode === 'dog_products' ? 'نشط الآن' : 'تفعيل هذه الصفحة'}
+                      {isSaving ? 'جاري الحفظ...' : formData.activeMode === 'dog_products' ? 'نشط الآن' : 'تفعيل هذه الصفحة'}
                     </button>
 
                     <span className="text-xs text-[#673ab7] font-semibold">نمط الاستبيان (Survey)</span>
@@ -373,13 +409,14 @@ export const AdminPanel: React.FC<Props> = ({
                   <div className="mt-4 pt-4 border-t border-[#dadce0]/60 flex items-center justify-between">
                     <button
                       type="button"
+                      disabled={isSaving}
                       className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
                         formData.activeMode === 'rewards'
                           ? 'bg-[#1a73e8] text-white'
                           : 'bg-[#f1f3f4] text-[#202124] hover:bg-[#e8eaed]'
                       }`}
                     >
-                      {formData.activeMode === 'rewards' ? 'نشط الآن' : 'تفعيل هذه الصفحة'}
+                      {isSaving ? 'جاري الحفظ...' : formData.activeMode === 'rewards' ? 'نشط الآن' : 'تفعيل هذه الصفحة'}
                     </button>
 
                     <span className="text-xs text-[#1a73e8] font-semibold">نمط العروض (CPA / Tasks)</span>
@@ -526,10 +563,11 @@ export const AdminPanel: React.FC<Props> = ({
               <div className="pt-4 flex items-center justify-between border-t border-[#dadce0]">
                 <button
                   type="submit"
-                  className="bg-[#1a73e8] hover:bg-[#1557b0] text-white text-sm font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 shadow cursor-pointer"
+                  disabled={isSaving}
+                  className="bg-[#1a73e8] hover:bg-[#1557b0] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 shadow cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
-                  <span>حفظ الروابط الآن</span>
+                  <span>{isSaving ? 'جاري الحفظ في Supabase...' : 'حفظ الروابط الآن'}</span>
                 </button>
               </div>
             </div>
@@ -810,10 +848,11 @@ export const AdminPanel: React.FC<Props> = ({
               <div className="pt-4 flex items-center justify-between border-t border-[#dadce0]">
                 <button
                   type="submit"
-                  className="bg-[#673ab7] hover:bg-[#5e35b1] text-white text-sm font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 shadow cursor-pointer"
+                  disabled={isSaving}
+                  className="bg-[#673ab7] hover:bg-[#5e35b1] disabled:opacity-50 text-white text-sm font-bold px-6 py-2.5 rounded-lg flex items-center gap-2 shadow cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
-                  <span>حفظ كافة التعديلات وكلمة المرور</span>
+                  <span>{isSaving ? 'جاري الحفظ في Supabase...' : 'حفظ كافة التعديلات وكلمة المرور'}</span>
                 </button>
 
                 <button

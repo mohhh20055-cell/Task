@@ -1,5 +1,5 @@
 -- ============================================================
--- SUPABASE DATABASE SCHEMA FOR TASK / REWARDS LANDING APP
+-- SUPABASE DATABASE SCHEMA & RLS PERMISSIONS
 -- Copy and paste this script into Supabase SQL Editor:
 -- https://supabase.com/dashboard/project/dqjinpglmymfyvzovfht/sql/new
 -- ============================================================
@@ -11,21 +11,8 @@ CREATE TABLE IF NOT EXISTS public.app_config (
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable RLS (Row Level Security) on 'app_config'
-ALTER TABLE public.app_config ENABLE ROW LEVEL SECURITY;
-
--- Allow anonymous read & write access to 'app_config'
-DROP POLICY IF EXISTS "Allow public select on app_config" ON public.app_config;
-CREATE POLICY "Allow public select on app_config" 
-    ON public.app_config FOR SELECT 
-    USING (true);
-
-DROP POLICY IF EXISTS "Allow public insert/update on app_config" ON public.app_config;
-CREATE POLICY "Allow public insert/update on app_config" 
-    ON public.app_config FOR ALL 
-    USING (true)
-    WITH CHECK (true);
-
+-- Disable Row Level Security (RLS) or ensure public access for app_config
+ALTER TABLE public.app_config DISABLE ROW LEVEL SECURITY;
 
 -- 2. Create table 'form_submissions' for storing user leads/responses
 CREATE TABLE IF NOT EXISTS public.form_submissions (
@@ -36,25 +23,8 @@ CREATE TABLE IF NOT EXISTS public.form_submissions (
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Enable RLS on 'form_submissions'
-ALTER TABLE public.form_submissions ENABLE ROW LEVEL SECURITY;
-
--- Allow anonymous read, insert, delete on 'form_submissions'
-DROP POLICY IF EXISTS "Allow public select on form_submissions" ON public.form_submissions;
-CREATE POLICY "Allow public select on form_submissions" 
-    ON public.form_submissions FOR SELECT 
-    USING (true);
-
-DROP POLICY IF EXISTS "Allow public insert on form_submissions" ON public.form_submissions;
-CREATE POLICY "Allow public insert on form_submissions" 
-    ON public.form_submissions FOR INSERT 
-    WITH CHECK (true);
-
-DROP POLICY IF EXISTS "Allow public delete on form_submissions" ON public.form_submissions;
-CREATE POLICY "Allow public delete on form_submissions" 
-    ON public.form_submissions FOR DELETE 
-    USING (true);
-
+-- Disable Row Level Security (RLS) or ensure public access for form_submissions
+ALTER TABLE public.form_submissions DISABLE ROW LEVEL SECURITY;
 
 -- 3. Insert initial default configuration row into 'app_config' (if not already exists)
 INSERT INTO public.app_config (id, config)
@@ -63,7 +33,7 @@ VALUES (
     '{
         "activeMode": "dog_products",
         "accountEmail": "iry00043@gmail.com",
-        "adminPassword": "admin",
+        "adminPassword": "admin2005",
         "dogForm": {
             "title": "Dog Products Offers Form",
             "description": "Please fill out this form if you are interested in our dog products offer",

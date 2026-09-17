@@ -43,7 +43,7 @@ export async function fetchConfigFromDB(): Promise<AppConfig> {
 /**
  * Save application configuration to Supabase 'app_config' table.
  */
-export async function saveConfigToDB(newConfig: AppConfig): Promise<boolean> {
+export async function saveConfigToDB(newConfig: AppConfig): Promise<{ success: boolean; error?: string }> {
   // Always update local cache first
   try {
     localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(newConfig));
@@ -52,7 +52,26 @@ export async function saveConfigToDB(newConfig: AppConfig): Promise<boolean> {
   }
 
   try {
-    const { error } = await supabase
+    // 1. Try update row id = 1 first
+    const { data: updateData, error: updateError } = await supabase
+      .from('app_config')
+      .update({
+        config: newConfig,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', 1)
+      .select();
+
+    if (!updateError && updateData && updateData.length > 0) {
+      return { success: true };
+    }
+
+    if (updateError) {
+      console.warn('Update attempt warning, falling back to upsert:', updateError.message);
+    }
+
+    // 2. Fallback to upsert if row does not exist yet
+    const { error: upsertError } = await supabase
       .from('app_config')
       .upsert({
         id: 1,
@@ -60,14 +79,15 @@ export async function saveConfigToDB(newConfig: AppConfig): Promise<boolean> {
         updated_at: new Date().toISOString(),
       });
 
-    if (error) {
-      console.error('Supabase saveConfig error:', error.message);
-      return false;
+    if (upsertError) {
+      console.error('Supabase saveConfig error:', upsertError.message);
+      return { success: false, error: upsertError.message };
     }
-    return true;
-  } catch (err) {
+
+    return { success: true };
+  } catch (err: any) {
     console.error('Error saving config to Supabase:', err);
-    return false;
+    return { success: false, error: err?.message || 'Failed to communicate with Supabase database.' };
   }
 }
 

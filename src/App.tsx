@@ -69,9 +69,10 @@ export default function App() {
     };
   }, [config]);
 
-  const saveConfig = async (newConfig: AppConfig) => {
+  const saveConfig = async (newConfig: AppConfig): Promise<{ success: boolean; error?: string }> => {
     setConfig(newConfig);
-    await saveConfigToDB(newConfig);
+    const result = await saveConfigToDB(newConfig);
+    return result;
   };
 
   const handleFormSubmit = async (submission: FormSubmission) => {
