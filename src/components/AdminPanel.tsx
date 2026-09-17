@@ -420,6 +420,40 @@ export const AdminPanel: React.FC<Props> = ({
               </p>
 
               <div className="grid grid-cols-1 gap-5">
+                {/* iPhone / iOS URL */}
+                <div className="p-4 rounded-lg bg-[#f8f9fa] border border-[#dadce0] space-y-2">
+                  <label className="block text-sm font-bold text-[#202124] flex items-center gap-2">
+                    <span className="text-lg">🍎</span>
+                    <span>رابط عرض مستخدمي الأيفون (iPhone / iOS URL):</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.rewardsForm.iosUrl || ''}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        rewardsForm: { ...formData.rewardsForm, iosUrl: e.target.value },
+                      })
+                    }
+                    placeholder="https://your-cpa-network.com/offer-iphone"
+                    className="w-full p-2.5 bg-white border border-[#dadce0] rounded-lg text-sm font-mono text-[#202124] outline-none focus:border-[#1a73e8] focus:ring-1 focus:ring-[#1a73e8]"
+                  />
+                  <div className="text-xs text-[#5f6368] space-y-1">
+                    <span>نص الزر:</span>
+                    <input
+                      type="text"
+                      value={formData.rewardsForm.iosButtonText || ''}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          rewardsForm: { ...formData.rewardsForm, iosButtonText: e.target.value },
+                        })
+                      }
+                      className="mt-1 w-full p-2 bg-white border border-[#dadce0] rounded text-xs text-[#202124]"
+                    />
+                  </div>
+                </div>
+
                 {/* Android URL */}
                 <div className="p-4 rounded-lg bg-[#f8f9fa] border border-[#dadce0] space-y-2">
                   <label className="block text-sm font-bold text-[#202124] flex items-center gap-2">

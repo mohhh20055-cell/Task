@@ -33,6 +33,8 @@ export interface AppConfig {
     deviceInfo: string;
     howToClaimTitle: string;
     instructions: string;
+    iosButtonText: string;
+    iosUrl: string;
     androidButtonText: string;
     androidUrl: string;
     pcButtonText: string;

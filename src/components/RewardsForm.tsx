@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppConfig, FormSubmission } from '../types';
 import { GoogleFormFooter } from './GoogleFormFooter';
-import { ExternalLink, Smartphone, Monitor } from 'lucide-react';
+import { ExternalLink, Smartphone, Monitor, Apple } from 'lucide-react';
 
 interface Props {
   config: AppConfig;
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export const RewardsForm: React.FC<Props> = ({ config, onSubmit, onAdminClick }) => {
-  const handleOfferClick = (type: 'android' | 'pc', url: string) => {
+  const handleOfferClick = (type: 'ios' | 'android' | 'pc', url: string) => {
     // Log submission/click
     const submission: FormSubmission = {
       id: Date.now().toString(),
@@ -56,7 +56,7 @@ export const RewardsForm: React.FC<Props> = ({ config, onSubmit, onAdminClick })
           </div>
         </div>
 
-        {/* Card 1: Main Offer Details and Android CTA */}
+        {/* Card 1: Main Offer Details and iPhone / iOS CTA */}
         <div className="bg-white rounded-lg border border-[#dadce0] shadow-[0_1px_3px_0_rgba(60,64,67,0.15)] p-5 sm:p-6 space-y-4 text-center">
           <div className="text-base sm:text-lg font-bold text-[#202124] tracking-wide">
             {config.rewardsForm.programTitle}
@@ -78,25 +78,42 @@ export const RewardsForm: React.FC<Props> = ({ config, onSubmit, onAdminClick })
             {config.rewardsForm.instructions}
           </p>
 
-          {/* Android Button / Link */}
+          {/* iPhone / iOS Button / Link */}
           <div className="pt-3 pb-1">
             <button
               type="button"
-              id="android-offer-btn"
-              onClick={() => handleOfferClick('android', config.rewardsForm.androidUrl)}
+              id="ios-offer-btn"
+              onClick={() => handleOfferClick('ios', config.rewardsForm.iosUrl || 'https://example.com/ios-offer')}
               className="w-full py-3.5 px-4 rounded-lg bg-[#f8f9fa] border-2 border-[#1a73e8] hover:bg-[#e8f0fe] active:bg-[#d2e3fc] text-[#1a73e8] font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all shadow-sm group cursor-pointer"
             >
-              <Smartphone className="w-5 h-5 text-[#1a73e8] group-hover:scale-110 transition-transform" />
-              <span>{config.rewardsForm.androidButtonText}</span>
+              <Apple className="w-5 h-5 text-[#1a73e8] group-hover:scale-110 transition-transform" />
+              <span>{config.rewardsForm.iosButtonText || '👉 CLICK HERE FOR IPHONE / IOS USERS 👈 📱'}</span>
               <ExternalLink className="w-4 h-4 opacity-70 group-hover:opacity-100" />
             </button>
             <div className="text-[11px] text-[#70757a] mt-1.5 text-center truncate">
-              {config.rewardsForm.androidUrl}
+              {config.rewardsForm.iosUrl || 'https://example.com/ios-offer'}
             </div>
           </div>
         </div>
 
-        {/* Card 2: PC / Desktop CTA */}
+        {/* Card 2: Android CTA */}
+        <div className="bg-white rounded-lg border border-[#dadce0] shadow-[0_1px_3px_0_rgba(60,64,67,0.15)] p-5 sm:p-6 text-center">
+          <button
+            type="button"
+            id="android-offer-btn"
+            onClick={() => handleOfferClick('android', config.rewardsForm.androidUrl)}
+            className="w-full py-3.5 px-4 rounded-lg bg-[#f8f9fa] border-2 border-[#1a73e8] hover:bg-[#e8f0fe] active:bg-[#d2e3fc] text-[#1a73e8] font-bold text-sm sm:text-base flex items-center justify-center gap-2 transition-all shadow-sm group cursor-pointer"
+          >
+            <Smartphone className="w-5 h-5 text-[#1a73e8] group-hover:scale-110 transition-transform" />
+            <span>{config.rewardsForm.androidButtonText}</span>
+            <ExternalLink className="w-4 h-4 opacity-70 group-hover:opacity-100" />
+          </button>
+          <div className="text-[11px] text-[#70757a] mt-1.5 text-center truncate">
+            {config.rewardsForm.androidUrl}
+          </div>
+        </div>
+
+        {/* Card 3: PC / Desktop CTA */}
         <div className="bg-white rounded-lg border border-[#dadce0] shadow-[0_1px_3px_0_rgba(60,64,67,0.15)] p-5 sm:p-6 text-center">
           <button
             type="button"
@@ -113,7 +130,7 @@ export const RewardsForm: React.FC<Props> = ({ config, onSubmit, onAdminClick })
           </div>
         </div>
 
-        {/* Card 3: Terms & Conditions Disclaimer */}
+        {/* Card 4: Terms & Conditions Disclaimer */}
         <div className="bg-white rounded-lg border border-[#dadce0] shadow-[0_1px_3px_0_rgba(60,64,67,0.15)] p-4 sm:p-5">
           <p className="text-xs text-[#5f6368] italic leading-relaxed text-center">
             {config.rewardsForm.termsText}
